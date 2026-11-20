@@ -1,0 +1,399 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyPlLcqDOY5ts+elQ+bstHxy",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Aguilar-Romero/Metodos-numericos-1/blob/main/Tarea%20de%20Neville\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#Metodo de Neville\n",
+        "Utilizaremos el método de *Neville* para *aproximar* ($interpolar$) la función desconocida en un punto a partir de polinomios de $0$ hasta $4$."
+      ],
+      "metadata": {
+        "id": "RysASgi_CgWt"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd"
+      ],
+      "metadata": {
+        "id": "2TPCLmw_DvXe"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Ingresamos los valores de los $nodos$ y los de los $polinomios$ de grado $0$ para comenzar el algoritmo."
+      ],
+      "metadata": {
+        "id": "wJ5NFhTgD47P"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#nodos\n",
+        "x_values = np.array([1.0, 1.3, 1.6, 1.9, 2.2])\n",
+        "\n",
+        "y_values = np.array([\n",
+        "    0.7651977,\n",
+        "    0.6200860,\n",
+        "    0.4554022,\n",
+        "    0.2818186,\n",
+        "    0.1103623\n",
+        "])\n",
+        "\n",
+        "#Punto a aproximar:\n",
+        "x = 1.5"
+      ],
+      "metadata": {
+        "id": "KX9RxYkxD5ib"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Utilizaremos el algoritmo dado por la expresión: $$Q=\\frac{(x-x_{i-j})Q_{i,j-1}-(x-x_i)Q_{i-1,j-1}}{x_i-x_{i-j}}$$\n",
+        "El algoritmo comienza a partir de los polinomios de grado $0$ que se nos dan al inicio."
+      ],
+      "metadata": {
+        "id": "TNZ6dNmkEJVH"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#definimos la función\n",
+        "def neville(x, x_values, y_values):\n",
+        "\n",
+        "    n = len(x_values)\n",
+        "\n",
+        "    #Creamos matriz Q utilizando\n",
+        "    Q = np.zeros((n, n))\n",
+        "\n",
+        "    Q[:, 0] = y_values\n",
+        "\n",
+        "    #Se itera el método cambiando los valores con respecto a j e i\n",
+        "    for j in range(1, n):\n",
+        "\n",
+        "        for i in range(j, n):\n",
+        "\n",
+        "            Q[i, j] = (\n",
+        "                (x - x_values[i-j]) * Q[i, j-1]\n",
+        "                - (x - x_values[i]) * Q[i-1, j-1]\n",
+        "            ) / (x_values[i] - x_values[i-j])\n",
+        "\n",
+        "    return Q"
+      ],
+      "metadata": {
+        "id": "bllJLkJgEJm_"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Armamos el arreglo para ir mostrando los valores de los $nodos$ y $polinomios$."
+      ],
+      "metadata": {
+        "id": "biCxs2_lEQhs"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Q = neville(x, x_values, y_values)\n",
+        "\n",
+        "#Nombres de columna\n",
+        "columnas = [\n",
+        "    f\"Q{i}\" for i in range(len(x_values))\n",
+        "]\n",
+        "\n",
+        "#creamos la tabla con pandas\n",
+        "tabla = pd.DataFrame(\n",
+        "    Q,\n",
+        "    columns=columnas,\n",
+        "    index=x_values\n",
+        ")\n",
+        "\n",
+        "#Se muestra la tabla de valores\n",
+        "tabla.index.name = \"x_i\"\n",
+        "\n",
+        "tabla = tabla.where(\n",
+        "    np.tril(np.ones(Q.shape, dtype=bool))\n",
+        ")\n",
+        "\n",
+        "#Se muestran los resultados\n",
+        "print(\"TABLA DE NEVILLE\")\n",
+        "display(tabla.round(7))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 275
+        },
+        "id": "neSBtkp8ESTt",
+        "outputId": "0e68ba58-13b9-4255-ee6d-eec549b4bdac"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "TABLA DE NEVILLE\n"
+          ]
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "           Q0        Q1        Q2        Q3       Q4\n",
+              "x_i                                                 \n",
+              "1.0  0.765198       NaN       NaN       NaN      NaN\n",
+              "1.3  0.620086  0.523345       NaN       NaN      NaN\n",
+              "1.6  0.455402  0.510297  0.512471       NaN      NaN\n",
+              "1.9  0.281819  0.513263  0.511286  0.511813      NaN\n",
+              "2.2  0.110362  0.510427  0.513736  0.511830  0.51182"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-b96995cb-190d-44f6-822f-74d58172c633\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Q0</th>\n",
+              "      <th>Q1</th>\n",
+              "      <th>Q2</th>\n",
+              "      <th>Q3</th>\n",
+              "      <th>Q4</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>x_i</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>1.0</th>\n",
+              "      <td>0.765198</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1.3</th>\n",
+              "      <td>0.620086</td>\n",
+              "      <td>0.523345</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1.6</th>\n",
+              "      <td>0.455402</td>\n",
+              "      <td>0.510297</td>\n",
+              "      <td>0.512471</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>NaN</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1.9</th>\n",
+              "      <td>0.281819</td>\n",
+              "      <td>0.513263</td>\n",
+              "      <td>0.511286</td>\n",
+              "      <td>0.511813</td>\n",
+              "      <td>NaN</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2.2</th>\n",
+              "      <td>0.110362</td>\n",
+              "      <td>0.510427</td>\n",
+              "      <td>0.513736</td>\n",
+              "      <td>0.511830</td>\n",
+              "      <td>0.51182</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-b96995cb-190d-44f6-822f-74d58172c633')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-b96995cb-190d-44f6-822f-74d58172c633 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-b96995cb-190d-44f6-822f-74d58172c633');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "summary": "{\n  \"name\": \"display(tabla\",\n  \"rows\": 5,\n  \"fields\": [\n    {\n      \"column\": \"x_i\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.47434164902525694,\n        \"min\": 1.0,\n        \"max\": 2.2,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          1.3,\n          2.2,\n          1.6\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Q0\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.26071443309919184,\n        \"min\": 0.1103623,\n        \"max\": 0.7651977,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          0.620086,\n          0.1103623,\n          0.4554022\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Q1\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.00616187558587752,\n        \"min\": 0.5102968,\n        \"max\": 0.5233449,\n        \"num_unique_values\": 4,\n        \"samples\": [\n          0.5102968,\n          0.510427,\n          0.5233449\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Q2\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.0012254111527701327,\n        \"min\": 0.5112857,\n        \"max\": 0.5137361,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          0.5124715,\n          0.5112857,\n          0.5137361\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Q3\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 1.2374368670767143e-05,\n        \"min\": 0.5118127,\n        \"max\": 0.5118302,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          0.5118302,\n          0.5118127\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Q4\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": null,\n        \"min\": 0.51182,\n        \"max\": 0.51182,\n        \"num_unique_values\": 1,\n        \"samples\": [\n          0.51182\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Al final tenemos la aproximación con el polinomio de grado $4$."
+      ],
+      "metadata": {
+        "id": "FkUAqmzGEdUN"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "resultado = Q[-1, -1]\n",
+        "\n",
+        "print(\"RESULTADO FINAL\")\n",
+        "print(f\"f(1.5) ≈ {resultado:.7f}\")"
+      ],
+      "metadata": {
+        "id": "M9etIh8TEdoj",
+        "outputId": "715b6e49-fe97-4cfc-e4e2-e9c77c84a0a5",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "RESULTADO FINAL\n",
+            "f(1.5) ≈ 0.5118200\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
